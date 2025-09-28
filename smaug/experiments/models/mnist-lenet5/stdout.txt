@@ -1,0 +1,100 @@
+Loaded 1 test image(s). Shape=(1, 28, 28, 1), dtype=float16
+Labels = [7]
+=================================================================
+      Summary of the network: lenet5_smv (SMV)
+=================================================================
+Host memory access policy: AllDma.
+-----------------------------------------------------------------
+Name: data (Data)
+Parents:
+Children:conv 
+Input tensors:
+  input_tensor Float16 [1, 28, 28, 1] NHWC alignment(8)
+Output tensors:
+  data/output0 Float16 [1, 28, 28, 1] NHWC alignment(8)
+-----------------------------------------------------------------
+Name: data_1 (Data)
+Parents:
+Children:conv 
+Input tensors:
+  data_1/input0 Float16 [32, 3, 3, 1] NHWC alignment(8)
+Output tensors:
+  data_1/output0 Float16 [32, 3, 3, 1] NHWC alignment(8)
+-----------------------------------------------------------------
+Name: conv (Convolution3d)
+Parents:data data_1 
+Children:conv_1 
+Input tensors:
+  data/output0 Float16 [1, 28, 28, 1] NHWC alignment(8)
+  data_1/output0 Float16 [32, 3, 3, 1] NHWC alignment(8)
+Output tensors:
+  conv/output0 Float16 [1, 26, 26, 32] NHWC alignment(8)
+-----------------------------------------------------------------
+Name: data_2 (Data)
+Parents:
+Children:conv_1 
+Input tensors:
+  data_2/input0 Float16 [32, 3, 3, 32] NHWC alignment(8)
+Output tensors:
+  data_2/output0 Float16 [32, 3, 3, 32] NHWC alignment(8)
+-----------------------------------------------------------------
+Name: conv_1 (Convolution3d)
+Parents:conv data_2 
+Children:max_pool 
+Input tensors:
+  conv/output0 Float16 [1, 26, 26, 32] NHWC alignment(8)
+  data_2/output0 Float16 [32, 3, 3, 32] NHWC alignment(8)
+Output tensors:
+  conv_1/output0 Float16 [1, 24, 24, 32] NHWC alignment(8)
+-----------------------------------------------------------------
+Name: max_pool (MaxPooling)
+Parents:conv_1 
+Children:reorder 
+Input tensors:
+  conv_1/output0 Float16 [1, 24, 24, 32] NHWC alignment(8)
+Output tensors:
+  max_pool/output0 Float16 [1, 12, 12, 32] NHWC alignment(8)
+-----------------------------------------------------------------
+Name: reorder (Reorder)
+Parents:max_pool 
+Children:mat_mul 
+Input tensors:
+  max_pool/output0 Float16 [1, 12, 12, 32] NHWC alignment(8)
+Output tensors:
+  reorder/output0 Float16 [1, 4608] NC alignment(8)
+-----------------------------------------------------------------
+Name: data_3 (Data)
+Parents:
+Children:mat_mul 
+Input tensors:
+  data_3/input0 Float16 [128, 4608] NC alignment(8)
+Output tensors:
+  data_3/output0 Float16 [128, 4608] NC alignment(8)
+-----------------------------------------------------------------
+Name: mat_mul (InnerProduct)
+Parents:reorder data_3 
+Children:mat_mul_1 
+Input tensors:
+  reorder/output0 Float16 [1, 4608] NC alignment(8)
+  data_3/output0 Float16 [128, 4608] NC alignment(8)
+Output tensors:
+  mat_mul/output0 Float16 [1, 128] NC alignment(8)
+-----------------------------------------------------------------
+Name: data_4 (Data)
+Parents:
+Children:mat_mul_1 
+Input tensors:
+  data_4/input0 Float16 [10, 128] NC alignment(8)
+Output tensors:
+  data_4/output0 Float16 [10, 128] NC alignment(8)
+-----------------------------------------------------------------
+Name: mat_mul_1 (InnerProduct)
+Parents:mat_mul data_4 
+Children:
+Input tensors:
+  mat_mul/output0 Float16 [1, 128] NC alignment(8)
+  data_4/output0 Float16 [10, 128] NC alignment(8)
+Output tensors:
+  output_tensor Float16 [1, 10] NC alignment(8)
+-----------------------------------------------------------------
+

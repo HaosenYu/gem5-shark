@@ -1,0 +1,10 @@
+/** \defgroup Operators All SMAUG Operators
+  *
+  * All operators supported by SMAUG.
+  */
+
+/**
+  * \defgroup AladdinKernels Aladdin Kernel Functions
+  *
+  * Kernel functions meant to be run under Aladdin.
+  */

@@ -1,0 +1,7 @@
+model_dir=../../../../models
+
+# topo_file=${model_dir}/mnist-cnn10/cnn10_smv_topo.pbtxt
+# params_file=${model_dir}/mnist-cnn10/cnn10_smv_params.pb
+
+topo_file=${model_dir}/cifar10-cnn/cnn_smv_topo.pbtxt
+params_file=${model_dir}/cifar10-cnn/cnn_smv_params.pb

@@ -1,0 +1,198 @@
+Loaded 1 test image(s). Shape=(1, 32, 32, 1), dtype=float16
+Labels = [7]
+=================================================================
+      Summary of the network: cnn10_ref (Reference)
+=================================================================
+Host memory access policy: AllDma.
+-----------------------------------------------------------------
+Name: data (Data)
+Parents:
+Children:reorder 
+Input tensors:
+  data/input0 Float16 [1, 32, 32, 1] NHWC alignment(0)
+Output tensors:
+  data/output0 Float16 [1, 32, 32, 1] NHWC alignment(0)
+-----------------------------------------------------------------
+Name: reorder (Reorder)
+Parents:data 
+Children:conv 
+Input tensors:
+  data/output0 Float16 [1, 32, 32, 1] NHWC alignment(0)
+Output tensors:
+  reorder/output0 Float16 [1, 1, 32, 32] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: data_1 (Data)
+Parents:
+Children:reorder_1 
+Input tensors:
+  data_1/input0 Float16 [32, 3, 3, 1] NHWC alignment(0)
+Output tensors:
+  data_1/output0 Float16 [32, 3, 3, 1] NHWC alignment(0)
+-----------------------------------------------------------------
+Name: reorder_1 (Reorder)
+Parents:data_1 
+Children:conv 
+Input tensors:
+  data_1/output0 Float16 [32, 3, 3, 1] NHWC alignment(0)
+Output tensors:
+  reorder_1/output0 Float16 [32, 1, 3, 3] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: conv (Convolution3d)
+Parents:reorder reorder_1 
+Children:conv_1 
+Input tensors:
+  reorder/output0 Float16 [1, 1, 32, 32] NCHW alignment(0)
+  reorder_1/output0 Float16 [32, 1, 3, 3] NCHW alignment(0)
+Output tensors:
+  conv/output0 Float16 [1, 32, 32, 32] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: data_2 (Data)
+Parents:
+Children:reorder_2 
+Input tensors:
+  data_2/input0 Float16 [32, 3, 3, 32] NHWC alignment(0)
+Output tensors:
+  data_2/output0 Float16 [32, 3, 3, 32] NHWC alignment(0)
+-----------------------------------------------------------------
+Name: reorder_2 (Reorder)
+Parents:data_2 
+Children:conv_1 
+Input tensors:
+  data_2/output0 Float16 [32, 3, 3, 32] NHWC alignment(0)
+Output tensors:
+  reorder_2/output0 Float16 [32, 32, 3, 3] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: conv_1 (Convolution3d)
+Parents:conv reorder_2 
+Children:max_pool 
+Input tensors:
+  conv/output0 Float16 [1, 32, 32, 32] NCHW alignment(0)
+  reorder_2/output0 Float16 [32, 32, 3, 3] NCHW alignment(0)
+Output tensors:
+  conv_1/output0 Float16 [1, 32, 32, 32] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: max_pool (MaxPooling)
+Parents:conv_1 
+Children:conv_2 
+Input tensors:
+  conv_1/output0 Float16 [1, 32, 32, 32] NCHW alignment(0)
+Output tensors:
+  max_pool/output0 Float16 [1, 32, 16, 16] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: data_3 (Data)
+Parents:
+Children:reorder_3 
+Input tensors:
+  data_3/input0 Float16 [64, 3, 3, 32] NHWC alignment(0)
+Output tensors:
+  data_3/output0 Float16 [64, 3, 3, 32] NHWC alignment(0)
+-----------------------------------------------------------------
+Name: reorder_3 (Reorder)
+Parents:data_3 
+Children:conv_2 
+Input tensors:
+  data_3/output0 Float16 [64, 3, 3, 32] NHWC alignment(0)
+Output tensors:
+  reorder_3/output0 Float16 [64, 32, 3, 3] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: conv_2 (Convolution3d)
+Parents:max_pool reorder_3 
+Children:conv_3 
+Input tensors:
+  max_pool/output0 Float16 [1, 32, 16, 16] NCHW alignment(0)
+  reorder_3/output0 Float16 [64, 32, 3, 3] NCHW alignment(0)
+Output tensors:
+  conv_2/output0 Float16 [1, 64, 16, 16] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: data_4 (Data)
+Parents:
+Children:reorder_4 
+Input tensors:
+  data_4/input0 Float16 [64, 3, 3, 64] NHWC alignment(0)
+Output tensors:
+  data_4/output0 Float16 [64, 3, 3, 64] NHWC alignment(0)
+-----------------------------------------------------------------
+Name: reorder_4 (Reorder)
+Parents:data_4 
+Children:conv_3 
+Input tensors:
+  data_4/output0 Float16 [64, 3, 3, 64] NHWC alignment(0)
+Output tensors:
+  reorder_4/output0 Float16 [64, 64, 3, 3] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: conv_3 (Convolution3d)
+Parents:conv_2 reorder_4 
+Children:max_pool_1 
+Input tensors:
+  conv_2/output0 Float16 [1, 64, 16, 16] NCHW alignment(0)
+  reorder_4/output0 Float16 [64, 64, 3, 3] NCHW alignment(0)
+Output tensors:
+  conv_3/output0 Float16 [1, 64, 16, 16] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: max_pool_1 (MaxPooling)
+Parents:conv_3 
+Children:reorder_5 
+Input tensors:
+  conv_3/output0 Float16 [1, 64, 16, 16] NCHW alignment(0)
+Output tensors:
+  max_pool_1/output0 Float16 [1, 64, 8, 8] NCHW alignment(0)
+-----------------------------------------------------------------
+Name: reorder_5 (Reorder)
+Parents:max_pool_1 
+Children:mat_mul 
+Input tensors:
+  max_pool_1/output0 Float16 [1, 64, 8, 8] NCHW alignment(0)
+Output tensors:
+  reorder_5/output0 Float16 [1, 4096] NC alignment(0)
+-----------------------------------------------------------------
+Name: data_5 (Data)
+Parents:
+Children:reorder_6 
+Input tensors:
+  data_5/input0 Float16 [512, 4096] NC alignment(0)
+Output tensors:
+  data_5/output0 Float16 [512, 4096] NC alignment(0)
+-----------------------------------------------------------------
+Name: reorder_6 (Reorder)
+Parents:data_5 
+Children:mat_mul 
+Input tensors:
+  data_5/output0 Float16 [512, 4096] NC alignment(0)
+Output tensors:
+  reorder_6/output0 Float16 [4096, 512] CN alignment(0)
+-----------------------------------------------------------------
+Name: mat_mul (InnerProduct)
+Parents:reorder_5 reorder_6 
+Children:mat_mul_1 
+Input tensors:
+  reorder_5/output0 Float16 [1, 4096] NC alignment(0)
+  reorder_6/output0 Float16 [4096, 512] CN alignment(0)
+Output tensors:
+  mat_mul/output0 Float16 [1, 512] NC alignment(0)
+-----------------------------------------------------------------
+Name: data_6 (Data)
+Parents:
+Children:reorder_7 
+Input tensors:
+  data_6/input0 Float16 [10, 512] NC alignment(0)
+Output tensors:
+  data_6/output0 Float16 [10, 512] NC alignment(0)
+-----------------------------------------------------------------
+Name: reorder_7 (Reorder)
+Parents:data_6 
+Children:mat_mul_1 
+Input tensors:
+  data_6/output0 Float16 [10, 512] NC alignment(0)
+Output tensors:
+  reorder_7/output0 Float16 [512, 10] CN alignment(0)
+-----------------------------------------------------------------
+Name: mat_mul_1 (InnerProduct)
+Parents:mat_mul reorder_7 
+Children:
+Input tensors:
+  mat_mul/output0 Float16 [1, 512] NC alignment(0)
+  reorder_7/output0 Float16 [512, 10] CN alignment(0)
+Output tensors:
+  mat_mul_1/output0 Float16 [1, 10] NC alignment(0)
+-----------------------------------------------------------------
+

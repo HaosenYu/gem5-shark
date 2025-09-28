@@ -1,0 +1,10 @@
+MACRO(decide_patch_version LLVM_RECOMMEND_VERSION_ARG)
+  # force to use newest patch version
+  if (${LLVM_RECOMMEND_VERSION_ARG} VERSION_EQUAL "6.0")
+    SET(LLVM_PATCH_VERSION "6.0.0")
+    SET(CLANG_PATCH_VERSION "6.0.0")
+    SET(RT_PATCH_VERSION "6.0.0")
+  else()
+    message(FATAL_ERROR "Unsupported LLVM version : ${LLVM_RECOMMEND_VERSION_ARG}")
+  endif()
+ENDMACRO()

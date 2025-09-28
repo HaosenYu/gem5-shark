@@ -1,0 +1,17 @@
+0: system.remote_gdb: listening for remote gdb on port 7000
+info: Entering event queue @ 0.  Starting simulation...
+warn: ignoring syscall access(...)
+warn: ignoring syscall access(...)
+warn: ignoring syscall access(...)
+warn: ignoring syscall mprotect(...)
+warn: ignoring syscall mprotect(...)
+warn: ignoring syscall mprotect(...)
+warn: ignoring syscall mprotect(...)
+warn: mmap failing: arguments not page-aligned: start 0x7ffff7ff9000 length 0x59a0
+warn: x86 cpuid family 0x0000: unimplemented function 2
+warn: x86 cpuid family 0x0000: unimplemented function 2
+warn: x86 cpuid family 0x0000: unimplemented function 2
+info: Received mapping for array  at vaddr 203040 of length 4096.
+info: Received mapping for array  at vaddr 2040a0 of length 2304.
+info: Received mapping for array  at vaddr 204a00 of length 2048.
+warn: Couldn't read data from debugger.

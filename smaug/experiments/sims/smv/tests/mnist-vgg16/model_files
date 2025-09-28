@@ -1,0 +1,10 @@
+model_dir=../../../../models
+
+#topo_file=${model_dir}/mnist-vgg16/vgg16_smv_topo.pbtxt
+#params_file=${model_dir}/mnist-vgg16/vgg16_smv_params.pb
+
+#topo_file=${model_dir}/cifar10-vgg/vgg_smv_topo.pbtxt
+#params_file=${model_dir}/cifar10-vgg/vgg_smv_params.pb
+
+topo_file=attacked_smaug_haosen/vgg16_smv_topo.pbtxt
+params_file=attacked_smaug_haosen/vgg16_smv_params.pb

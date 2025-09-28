@@ -1,0 +1,4 @@
+/gem5-aladdin/build/
+*.pb
+*.o
+*.o.partial

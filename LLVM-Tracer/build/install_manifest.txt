@@ -1,0 +1,3 @@
+/workspace/LLVM-Tracer/lib/full_trace.so
+/workspace/LLVM-Tracer/lib/trace_logger.llvm
+/workspace/LLVM-Tracer/bin/get-labeled-stmts

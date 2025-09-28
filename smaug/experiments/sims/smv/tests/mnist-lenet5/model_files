@@ -1,0 +1,4 @@
+model_dir=../../../../models
+
+topo_file=${model_dir}/mnist-lenet5/lenet5_smv_topo.pbtxt
+params_file=${model_dir}/mnist-lenet5/lenet5_smv_params.pb

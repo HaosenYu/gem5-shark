@@ -1,0 +1,2436 @@
+name: "large_elu_ref"
+nodes {
+  name: "input"
+  op: Data
+  input_tensors {
+    name: "input/input0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 32
+      dims: 32
+      dims: 3
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "input/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 32
+      dims: 32
+      dims: 3
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder"
+  op: Reorder
+  parents: "input"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "input/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 32
+      dims: 32
+      dims: 3
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 3
+      dims: 32
+      dims: 32
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "data"
+  op: Data
+  input_tensors {
+    name: "data/input0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 3
+      dims: 3
+      dims: 3
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 3
+      dims: 3
+      dims: 3
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_1"
+  op: Reorder
+  parents: "data"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 3
+      dims: 3
+      dims: 3
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_1/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 3
+      dims: 3
+      dims: 3
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv0_stack0"
+  op: Convolution3d
+  parents: "reorder"
+  parents: "reorder_1"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "reorder/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 3
+      dims: 32
+      dims: 32
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_1/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 3
+      dims: 3
+      dims: 3
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv0_stack0/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 384
+      dims: 32
+      dims: 32
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "pool_stack0"
+  op: MaxPooling
+  parents: "conv0_stack0"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv0_stack0/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 384
+      dims: 32
+      dims: 32
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "pool_stack0/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 384
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    pool_params {
+      stride: 2
+      stride: 2
+      pool_size: 2
+      pool_size: 2
+    }
+  }
+}
+nodes {
+  name: "data_1"
+  op: Data
+  input_tensors {
+    name: "data_1/input0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 1
+      dims: 1
+      dims: 384
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_1/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 1
+      dims: 1
+      dims: 384
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_2"
+  op: Reorder
+  parents: "data_1"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_1/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 1
+      dims: 1
+      dims: 384
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_2/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 384
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv0_stack1"
+  op: Convolution3d
+  parents: "pool_stack0"
+  parents: "reorder_2"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "pool_stack0/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 384
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_2/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 384
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv0_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 384
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_2"
+  op: Data
+  input_tensors {
+    name: "data_2/input0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 2
+      dims: 2
+      dims: 384
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_2/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 2
+      dims: 2
+      dims: 384
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_3"
+  op: Reorder
+  parents: "data_2"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_2/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 2
+      dims: 2
+      dims: 384
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_3/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 384
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv1_stack1"
+  op: Convolution3d
+  parents: "conv0_stack1"
+  parents: "reorder_3"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv0_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 384
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_3/output0"
+    data_type: Float32
+    shape {
+      dims: 384
+      dims: 384
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv1_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 384
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_3"
+  op: Data
+  input_tensors {
+    name: "data_3/input0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 2
+      dims: 2
+      dims: 384
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_3/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 2
+      dims: 2
+      dims: 384
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_4"
+  op: Reorder
+  parents: "data_3"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_3/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 2
+      dims: 2
+      dims: 384
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_4/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 384
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv2_stack1"
+  op: Convolution3d
+  parents: "conv1_stack1"
+  parents: "reorder_4"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv1_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 384
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_4/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 384
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv2_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 640
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_4"
+  op: Data
+  input_tensors {
+    name: "data_4/input0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 2
+      dims: 2
+      dims: 640
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_4/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 2
+      dims: 2
+      dims: 640
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_5"
+  op: Reorder
+  parents: "data_4"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_4/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 2
+      dims: 2
+      dims: 640
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_5/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 640
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv3_stack1"
+  op: Convolution3d
+  parents: "conv2_stack1"
+  parents: "reorder_5"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv2_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 640
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_5/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 640
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv3_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 640
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "pool_stack1"
+  op: MaxPooling
+  parents: "conv3_stack1"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv3_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 640
+      dims: 16
+      dims: 16
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "pool_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 640
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    pool_params {
+      stride: 2
+      stride: 2
+      pool_size: 2
+      pool_size: 2
+    }
+  }
+}
+nodes {
+  name: "data_5"
+  op: Data
+  input_tensors {
+    name: "data_5/input0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 1
+      dims: 1
+      dims: 640
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_5/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 1
+      dims: 1
+      dims: 640
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_6"
+  op: Reorder
+  parents: "data_5"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_5/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 1
+      dims: 1
+      dims: 640
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_6/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 640
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv0_stack2"
+  op: Convolution3d
+  parents: "pool_stack1"
+  parents: "reorder_6"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "pool_stack1/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 640
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_6/output0"
+    data_type: Float32
+    shape {
+      dims: 640
+      dims: 640
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv0_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 640
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_6"
+  op: Data
+  input_tensors {
+    name: "data_6/input0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 2
+      dims: 2
+      dims: 640
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_6/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 2
+      dims: 2
+      dims: 640
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_7"
+  op: Reorder
+  parents: "data_6"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_6/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 2
+      dims: 2
+      dims: 640
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_7/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 640
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv1_stack2"
+  op: Convolution3d
+  parents: "conv0_stack2"
+  parents: "reorder_7"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv0_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 640
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_7/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 640
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv1_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_7"
+  op: Data
+  input_tensors {
+    name: "data_7/input0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 2
+      dims: 2
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_7/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 2
+      dims: 2
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_8"
+  op: Reorder
+  parents: "data_7"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_7/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 2
+      dims: 2
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_8/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 768
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv2_stack2"
+  op: Convolution3d
+  parents: "conv1_stack2"
+  parents: "reorder_8"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv1_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_8/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 768
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv2_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_8"
+  op: Data
+  input_tensors {
+    name: "data_8/input0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 2
+      dims: 2
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_8/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 2
+      dims: 2
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_9"
+  op: Reorder
+  parents: "data_8"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_8/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 2
+      dims: 2
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_9/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 768
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv3_stack2"
+  op: Convolution3d
+  parents: "conv2_stack2"
+  parents: "reorder_9"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv2_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_9/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 768
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv3_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "pool_stack2"
+  op: MaxPooling
+  parents: "conv3_stack2"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv3_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 8
+      dims: 8
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "pool_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 4
+      dims: 4
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    pool_params {
+      stride: 2
+      stride: 2
+      pool_size: 2
+      pool_size: 2
+    }
+  }
+}
+nodes {
+  name: "data_9"
+  op: Data
+  input_tensors {
+    name: "data_9/input0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 1
+      dims: 1
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_9/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 1
+      dims: 1
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_10"
+  op: Reorder
+  parents: "data_9"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_9/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 1
+      dims: 1
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_10/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 768
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv0_stack3"
+  op: Convolution3d
+  parents: "pool_stack2"
+  parents: "reorder_10"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "pool_stack2/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 4
+      dims: 4
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_10/output0"
+    data_type: Float32
+    shape {
+      dims: 768
+      dims: 768
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv0_stack3/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 4
+      dims: 4
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_10"
+  op: Data
+  input_tensors {
+    name: "data_10/input0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 2
+      dims: 2
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_10/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 2
+      dims: 2
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_11"
+  op: Reorder
+  parents: "data_10"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_10/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 2
+      dims: 2
+      dims: 768
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_11/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 768
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv1_stack3"
+  op: Convolution3d
+  parents: "conv0_stack3"
+  parents: "reorder_11"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv0_stack3/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 768
+      dims: 4
+      dims: 4
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_11/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 768
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv1_stack3/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 896
+      dims: 4
+      dims: 4
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_11"
+  op: Data
+  input_tensors {
+    name: "data_11/input0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 2
+      dims: 2
+      dims: 896
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_11/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 2
+      dims: 2
+      dims: 896
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_12"
+  op: Reorder
+  parents: "data_11"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_11/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 2
+      dims: 2
+      dims: 896
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_12/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 896
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv2_stack3"
+  op: Convolution3d
+  parents: "conv1_stack3"
+  parents: "reorder_12"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv1_stack3/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 896
+      dims: 4
+      dims: 4
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_12/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 896
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv2_stack3/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 896
+      dims: 4
+      dims: 4
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "pool_stack3"
+  op: MaxPooling
+  parents: "conv2_stack3"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv2_stack3/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 896
+      dims: 4
+      dims: 4
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "pool_stack3/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 896
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    pool_params {
+      stride: 2
+      stride: 2
+      pool_size: 2
+      pool_size: 2
+    }
+  }
+}
+nodes {
+  name: "data_12"
+  op: Data
+  input_tensors {
+    name: "data_12/input0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 3
+      dims: 3
+      dims: 896
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_12/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 3
+      dims: 3
+      dims: 896
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_13"
+  op: Reorder
+  parents: "data_12"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_12/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 3
+      dims: 3
+      dims: 896
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_13/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 896
+      dims: 3
+      dims: 3
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv0_stack4"
+  op: Convolution3d
+  parents: "pool_stack3"
+  parents: "reorder_13"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "pool_stack3/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 896
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_13/output0"
+    data_type: Float32
+    shape {
+      dims: 896
+      dims: 896
+      dims: 3
+      dims: 3
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv0_stack4/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 896
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_13"
+  op: Data
+  input_tensors {
+    name: "data_13/input0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 2
+      dims: 2
+      dims: 896
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_13/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 2
+      dims: 2
+      dims: 896
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_14"
+  op: Reorder
+  parents: "data_13"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_13/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 2
+      dims: 2
+      dims: 896
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_14/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 896
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv1_stack4"
+  op: Convolution3d
+  parents: "conv0_stack4"
+  parents: "reorder_14"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv0_stack4/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 896
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_14/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 896
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv1_stack4/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1024
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_14"
+  op: Data
+  input_tensors {
+    name: "data_14/input0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 2
+      dims: 2
+      dims: 1024
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_14/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 2
+      dims: 2
+      dims: 1024
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_15"
+  op: Reorder
+  parents: "data_14"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_14/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 2
+      dims: 2
+      dims: 1024
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_15/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 1024
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv2_stack4"
+  op: Convolution3d
+  parents: "conv1_stack4"
+  parents: "reorder_15"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv1_stack4/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1024
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_15/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 1024
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv2_stack4/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1024
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "pool_stack4"
+  op: MaxPooling
+  parents: "conv2_stack4"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv2_stack4/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1024
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "pool_stack4/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1024
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    pool_params {
+      stride: 2
+      stride: 2
+      pool_size: 2
+      pool_size: 2
+    }
+  }
+}
+nodes {
+  name: "data_15"
+  op: Data
+  input_tensors {
+    name: "data_15/input0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 1
+      dims: 1
+      dims: 1024
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_15/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 1
+      dims: 1
+      dims: 1024
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_16"
+  op: Reorder
+  parents: "data_15"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_15/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 1
+      dims: 1
+      dims: 1024
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_16/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 1024
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv0_stack5"
+  op: Convolution3d
+  parents: "pool_stack4"
+  parents: "reorder_16"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "pool_stack4/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1024
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_16/output0"
+    data_type: Float32
+    shape {
+      dims: 1024
+      dims: 1024
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv0_stack5/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1024
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_16"
+  op: Data
+  input_tensors {
+    name: "data_16/input0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 2
+      dims: 2
+      dims: 1024
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_16/output0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 2
+      dims: 2
+      dims: 1024
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_17"
+  op: Reorder
+  parents: "data_16"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_16/output0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 2
+      dims: 2
+      dims: 1024
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_17/output0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 1024
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv1_stack5"
+  op: Convolution3d
+  parents: "conv0_stack5"
+  parents: "reorder_17"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv0_stack5/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1024
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_17/output0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 1024
+      dims: 2
+      dims: 2
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv1_stack5/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1152
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_17"
+  op: Data
+  input_tensors {
+    name: "data_17/input0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 1
+      dims: 1
+      dims: 1152
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_17/output0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 1
+      dims: 1
+      dims: 1152
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_18"
+  op: Reorder
+  parents: "data_17"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_17/output0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 1
+      dims: 1
+      dims: 1152
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_18/output0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 1152
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv0_stack6"
+  op: Convolution3d
+  parents: "conv1_stack5"
+  parents: "reorder_18"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv1_stack5/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1152
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_18/output0"
+    data_type: Float32
+    shape {
+      dims: 1152
+      dims: 1152
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv0_stack6/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1152
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+nodes {
+  name: "data_18"
+  op: Data
+  input_tensors {
+    name: "data_18/input0"
+    data_type: Float32
+    shape {
+      dims: 100
+      dims: 1
+      dims: 1
+      dims: 1152
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "data_18/output0"
+    data_type: Float32
+    shape {
+      dims: 100
+      dims: 1
+      dims: 1
+      dims: 1152
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "reorder_19"
+  op: Reorder
+  parents: "data_18"
+  src_tensors_indices: 0
+  input_tensors {
+    name: "data_18/output0"
+    data_type: Float32
+    shape {
+      dims: 100
+      dims: 1
+      dims: 1
+      dims: 1152
+      layout: NHWC
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "reorder_19/output0"
+    data_type: Float32
+    shape {
+      dims: 100
+      dims: 1152
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+}
+nodes {
+  name: "conv0_stack7"
+  op: Convolution3d
+  parents: "conv0_stack6"
+  parents: "reorder_19"
+  src_tensors_indices: 0
+  src_tensors_indices: 0
+  input_tensors {
+    name: "conv0_stack6/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 1152
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  input_tensors {
+    name: "reorder_19/output0"
+    data_type: Float32
+    shape {
+      dims: 100
+      dims: 1152
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  output_tensors {
+    name: "conv0_stack7/output0"
+    data_type: Float32
+    shape {
+      dims: 1
+      dims: 100
+      dims: 1
+      dims: 1
+      layout: NCHW
+    }
+    data_format: Uncompressed
+  }
+  params {
+    conv_params {
+      padding: SamePadding
+      stride: 1
+      stride: 1
+    }
+    act_params {
+      activation: ELU
+      elu_params {
+        alpha: 0.1
+      }
+    }
+  }
+}
+backend: "Reference"
+mem_policy: AllDma

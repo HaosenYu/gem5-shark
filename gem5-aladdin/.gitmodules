@@ -1,0 +1,9 @@
+[submodule "aladdin"]
+  path = src/aladdin
+  url = https://github.com/harvard-acc/aladdin
+[submodule "xenon"]
+	path = sweeps/xenon
+	url = https://github.com/xyzsam/xenon
+[submodule "FP16"]
+	path = ext/fp16
+	url = https://github.com/xyzsam/FP16

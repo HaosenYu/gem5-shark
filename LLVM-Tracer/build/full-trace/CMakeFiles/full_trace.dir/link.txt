@@ -1,0 +1,1 @@
+/usr/bin/c++ -fPIC -Wall -W -Wno-strict-aliasing -Wno-unused-parameter -Wwrite-strings -pedantic -Wno-long-long -std=c++11 -fno-rtti -O3  -shared -Wl,-soname,full_trace.so -o full_trace.so CMakeFiles/full_trace.dir/full_trace.cpp.o  -L/usr/local/lib 

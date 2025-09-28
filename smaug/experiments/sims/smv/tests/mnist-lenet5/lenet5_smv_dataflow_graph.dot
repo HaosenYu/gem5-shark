@@ -1,0 +1,23 @@
+digraph G {
+0[label="data"];
+1[label="data_1"];
+2[label="conv"];
+3[label="data_2"];
+4[label="conv_1"];
+5[label="max_pool"];
+6[label="reorder"];
+7[label="data_3"];
+8[label="mat_mul"];
+9[label="data_4"];
+10[label="mat_mul_1"];
+0->2 ;
+1->2 ;
+2->4 ;
+3->4 ;
+4->5 ;
+5->6 ;
+6->8 ;
+7->8 ;
+8->10 ;
+9->10 ;
+}

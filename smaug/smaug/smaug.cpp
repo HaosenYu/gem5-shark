@@ -73,7 +73,19 @@ int main(int argc, char* argv[]) {
          "If the backend contains a systolic array, use it whenever possible.")
          ("enable-swap-att",
             po::value(&enable_swap_att)->implicit_value(true),
-            "Enabling swap attack. Randomly swapping the index of pixels.");
+            "Enabling swap attack. Randomly swapping the index of pixels.")
+         ("enable-tiling-attack",
+            po::value(&enable_tiling_att)->implicit_value(true),
+            "Enabling tiling attack. Shrinks the SMV convolution tiling "
+            "maxTileSize to 25% of the original, forcing more/smaller tiles.")
+         ("tiling-attack-gemm",
+            po::value(&tiling_att_gemm)->implicit_value(true),
+            "Extend the tiling attack to the SMV inner-product (GEMM) tiler, "
+            "as needed for GEMM-only workloads such as Transformer blocks.")
+         ("enable-tiling-defense",
+            po::value(&enable_tiling_defense)->implicit_value(true),
+            "Enabling tiling-parameter range check (defense). Restores the tile "
+            "budget to the hardware scratchpad size if it is anomalously small.");
     // clang-format on
 
     po::options_description hidden;

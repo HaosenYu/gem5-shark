@@ -25,15 +25,22 @@ const int kNumMaccsPerPE = 32;
 void SmvInnerProductOp::runNWA(TiledTensor& inputs,
                                TiledTensor& weights,
                                TiledTensor& outputs) {
-    // Ordinarily, we don't need to tile the outputs. If this fails, it means
-    // the inner product has uncommonly large outputs, let's add the output
-    // iteration when that happens.
-    assert(outputs.size() == 1 &&
-           "Inner product outputs tiling not implemented yet!");
     int inputNumTiles = inputs.getShape()[0];
     int inputActTiles = inputs.getShape()[1];
     int weightActTiles = weights.getShape()[1];
     int weightNeuronTiles = weights.getShape()[0];
+    // Output tiling. The tiling optimizer splits the outputs only along the
+    // batch dimension of the input tiles and the neuron dimension of the
+    // weight tiles, so every output tile receives the results of exactly one
+    // (N, W) pair. Large GEMMs (e.g. LLM projections, or any GEMM under a
+    // reduced tile budget) need this; when the outputs fit in one tile the
+    // behavior below is identical to the single-output-tile original.
+    int outputNumTiles = outputs.getShape()[0];
+    int outputNeuronTiles = outputs.getShape()[1];
+    assert((outputNumTiles == 1 || outputNumTiles == inputNumTiles) &&
+           "Output batch tiles must match the input batch tiles!");
+    assert((outputNeuronTiles == 1 || outputNeuronTiles == weightNeuronTiles) &&
+           "Output neuron tiles must match the weight neuron tiles!");
     auto inputIdx = inputs.startIndex();
     auto weightIdx = weights.startIndex();
     auto outputIdx = outputs.startIndex();
@@ -59,7 +66,10 @@ void SmvInnerProductOp::runNWA(TiledTensor& inputs,
             // loop nests beyond this level will need to run in serial, because
             // the input/weight channelwise tiles iteration accumulate results
             // to the same output tile.
-            int outputTileIdx = outputIdx(N, 0);
+            int outputTileIdx = outputIdx(outputNumTiles == 1 ? 0 : N,
+                                          outputNeuronTiles == 1 ? 0 : W);
+            // Offset of this weight tile's neurons inside the output tile.
+            int neuronOffset = outputNeuronTiles == 1 ? finishedNeurons : 0;
             Tensor* outputTile = outputs[outputTileIdx];
             const TensorShape& outputShape = outputTile->getShape();
             mapArrayToAccel(smv::kInnerProductHw + currAccelIdx, "host_results",
@@ -108,11 +118,13 @@ void SmvInnerProductOp::runNWA(TiledTensor& inputs,
                     readInputs = true;
                     lastReadInputTileIdx[currAccelIdx] = inputTileIdx;
                 }
-                // We only need to send the results back to host memory in the
-                // very last invocation.
-                bool sendOutputs = (N == inputNumTiles - 1) &&
-                                   (W == weightNeuronTiles - 1) &&
-                                   (wC == weightActTiles - 1);
+                // Send an output tile back to host memory in the last
+                // invocation that writes to it. With a single output tile
+                // this is the very last invocation, as before.
+                bool sendOutputs =
+                        (wC == weightActTiles - 1) &&
+                        (outputNeuronTiles > 1 || W == weightNeuronTiles - 1) &&
+                        (outputNumTiles > 1 || N == inputNumTiles - 1);
 
                 std::unique_ptr<volatile int> finishFlag = invokeKernelNoBlock(
                         currAccelIdx, smv::kInnerProductHw + currAccelIdx,
@@ -122,7 +134,7 @@ void SmvInnerProductOp::runNWA(TiledTensor& inputs,
                         outputTile->data<float16>(), smv::spad0, smv::spad1,
                         smv::spad2, inputDims, weightsDims, outputDims,
                         inputShape.getPadding(1), weightsShape.getPadding(1),
-                        outputShape.getPadding(1), actStart, finishedNeurons,
+                        outputShape.getPadding(1), actStart, neuronOffset,
                         accumulate, readInputs, sendOutputs, actInfo.function,
                         actInfo.params, &sampling);
                 accelPool.addFinishFlag(currAccelIdx, std::move(finishFlag));

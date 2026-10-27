@@ -79,3 +79,31 @@ backend_layouts = {
 }
 
 backend_datatype = {"SMV": np.float16, "Reference": np.float32}
+
+# TODO attack simulation only: OPAtt (operator attack) controls.
+#
+# OPAtt is a model-compilation-stage threat: an attacker who controls the
+# operator-creating stage rewrites the graph before it is serialized. SMAUG
+# emits two artifacts -- the topology (*_topo.pbtxt) and the parameters
+# (*_params.pb) -- and OPAtt has two corresponding sub-classes:
+#
+#   operator substitution -> tampers with the topology (the op itself changes)
+#     "relu-identity"    Drop the fused ReLU (removes the non-linearity).
+#     "relu-sigmoid"     Replace ReLU with Sigmoid.
+#     "relu-tanh"        Replace ReLU with Tanh.
+#     "maxpool-avgpool"  Replace MaxPooling with AveragePooling.
+#     "softmax-identity" Drop the attention softmax (Transformer workloads), so
+#                        attention weights are no longer normalised.
+#
+#   parameter corruption  -> tampers with the params proto (the op is intact)
+#     "gemm-weight"      Zero a random fraction of every mat_mul weight.
+#     "conv-weight"      Zero a random fraction of every convolution filter.
+#
+# `operator_attack_ratio` is the fraction zeroed by the corruption specs, and
+# `operator_attack_seed` makes the corruption reproducible. Both sub-classes
+# are serialized into the model the backend executes, so the backend faithfully
+# runs the malicious graph.
+enable_operator_attack = False
+operator_attack_spec = "gemm-weight"
+operator_attack_ratio = 0.9
+operator_attack_seed = 42

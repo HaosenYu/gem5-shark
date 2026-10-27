@@ -133,6 +133,12 @@ def sigmoid(input_tensor, name="sigmoid"):
 
 def softmax(input_tensor, name=None):
   """Softmax operator."""
+  # TODO attack simulation only: OPAtt operator substitution that removes the
+  # softmax node from the graph (see the spec list in global_vars).
+  if (global_vars.enable_operator_attack
+      and global_vars.operator_attack_spec == "softmax-identity"):
+    print("[OPAtt/softmax-identity] %s: softmax -> identity" % name)
+    return input_tensor
   input_tensor = array_ops.check_and_add_layout_transform(
       name=name, op=types_pb2.Softmax, input_tensors=[input_tensor])[0]
   return common.add_node(

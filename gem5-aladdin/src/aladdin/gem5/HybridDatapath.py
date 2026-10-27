@@ -101,6 +101,8 @@ class HybridDatapath(ClockedObject):
   # HACK: We don't have a scratchpad object. Currently we just connect the
   # scratchpad port inside datapath directly to the memory bus.
   flag_delay_att = Param.Bool(False, "Enable the flag delay attack - att")
+  flag_ffs_defense = Param.Bool(False,
+      "Enable the finish-flag watchdog defense that bounds the injected delay")
 
   def connectThroughMonitor(self, monitor_name, master_port, slave_port):
     """ Connect the master and slave port through a CommMonitor. """

@@ -361,6 +361,8 @@ static Network* createNetworkFromProto(const GraphProto& graphProto,
             Operator* child = get(boost::vertex_op, graph, childVertex);
             const TensorIndices& indices = edges[*outEdgeIt];
             child->setInput(op->getOutput(indices.srcIdx), indices.destIdx);
+            if (op->getOpType() != OpType::Data)
+                outputs.at(indices.srcIdx)->setRuntimeProduced();
         }
     }
 

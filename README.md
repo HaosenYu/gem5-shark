@@ -12,6 +12,7 @@
 .
 ├─ gem5-aladdin/              # gem5 + Aladdin (SoC + accelerator simulation)
 ├─ LLVM-Tracer/               # LLVM-based tracer used by SMAUG
+├─ gem5-shark-llm/            # Transformer/LLM workloads, PyTorch backend, analysis
 ├─ smaug/                     # SMAUG (framework + experiments + sims)
 │  └─ experiments/
 │     └─ sims/
@@ -41,6 +42,32 @@
 
 * **C model updates** inside `smaug/` and accelerator backends to expose hooks for fault or attack injection, data perturbation, timing effects, and instrumentation needed for threat studies.
 * **Python wrapper updates** to parse **new CLI options** that toggle threat scenarios and pass them through either to SMAUG runtime or to gem5-Aladdin configuration.
+
+## Updates for the 2026 revision
+
+* **Defenses:** tiling range check (`--enable-tiling-defense`) and finish-flag
+  watchdog (`flag_ffs_defense` in `gem5.cfg`).
+* **OPAtt** with two sub-classes, operator substitution and parameter corruption,
+  plus `softmax-identity` for Transformers (`smaug/smaug/python/`).
+* **Transformer support in the SMV inner-product operator:** output tiling
+  (`smv_inner_product_op.cpp`), and weight tiles produced at run time, such as
+  the keys and values of attention, are copied once their producer has run
+  (`core/tensor.h`, `core/network_builder.cpp`, `smv_inner_product_tiling.cpp`).
+* **TAtt on the GEMM tiler** (`--tiling-attack-gemm`).
+* **gem5-Aladdin:** the finish-flag acknowledgement in
+  `HybridDatapath::cacheRespCallback` no longer schedules a tick event that is
+  already pending, which aborted long runs with an EventQueue assertion. Runs
+  that did not hit the assertion are unchanged.
+* **Serialization:** `smaug/smaug/python/tensor.py` writes tensors in row-major
+  order also for transposed (Fortran-ordered) arrays.
+* **`gem5-shark-llm/`:** LLM and Transformer workloads, gem5 run scripts, the
+  PyTorch backend for complete pretrained models, and analysis scripts (see its README).
+* **Figure 4:** `smaug/experiments/sims/smv/tests/mnist-vgg16/tiling_att_fig4_corrected/`
+  regenerates the figure with each accelerator invocation charged its own
+  scratchpad energy.
+
+After merging, rebuild `gem5-aladdin` and `smaug` (run `make clean` first: the
+SMAUG Makefile does not track header dependencies).
 
 ---
 
@@ -76,11 +103,32 @@ Typical knobs:
 --enable-swap-att[=1]
     Enable pixel-index swapping on inputs (default 1=on).
 
---enable-operator-attack[=spec]
-    Attack selected ops (e.g., Conv/GEMM/ReLU); `spec` chooses ops/action.
+--enable-tiling-attack
+    Tiling attack (TAtt): shrink the SMV convolution tile budget (maxTileSize)
+    to 25%, so tensors are split into more and smaller tiles.
 
---enable-tiling-attack[=level]
-    Perturb tiling/dataflow to hurt locality; `level` sets severity.
+--tiling-attack-gemm
+    Apply the tiling attack also to the SMV inner-product (GEMM) tiler, which
+    carries the projections and attention multiplications of Transformers.
+
+--enable-tiling-defense
+    Tiling range check (D-TAtt): a tile budget below half of the
+    scratchpad-supported size is restored to that size.
+```
+
+#### Operator attack (OPAtt), applied while the model graph is built
+
+```
+smaug.python.global_vars:
+  enable_operator_attack = True
+  operator_attack_spec   = relu-identity | relu-sigmoid | relu-tanh
+                           | maxpool-avgpool | softmax-identity    (operator substitution)
+                           | gemm-weight | conv-weight             (parameter corruption)
+  operator_attack_ratio  = 0.9    fraction of weights zeroed by the corruption specs
+  operator_attack_seed   = 42
+
+Example: python smaug/experiments/models/mnist-lenet5/lenet5_inference.py \
+             --enable-operator-attack --operator-attack-ratio 0.9
 ```
 
 > These flags are parsed by the **SMAUG-side** wrappers and, when needed, propagated down to gem5-Aladdin configs.
@@ -124,10 +172,12 @@ Typical knobs:
 #### Example: gem5.cfg switch for delay injection
 
 ```
-flag_delay_att = 1
+flag_delay_att = True     # FFSAtt: delay every accelerator finish flag
+flag_ffs_defense = True   # D-FFSAtt: host-side finish-flag watchdog that bounds the delay
 ```
 
-Enables injected timing delay (NoC/NI/router) to model jitter/congestion. Set `0` to disable.
+`flag_delay_att` makes a Trojan delay the accelerator's finish flag (30M to 130M
+ticks per invocation); `flag_ffs_defense` caps every wait at the watchdog window.
 
 ---
 

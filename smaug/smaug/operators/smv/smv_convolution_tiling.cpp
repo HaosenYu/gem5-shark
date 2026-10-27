@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "smaug/core/backend.h"
+#include "smaug/core/globals.h"
 #include "smaug/operators/common.h"
 #include "smaug/operators/smv/smv_convolution_op.h"
 #include "smaug/operators/smv/smv_convolution_tiling.h"
@@ -59,6 +60,30 @@ TilingConfig TilingOptimizer::computeBasicTileShapes(SmvConvolutionOp* op) {
     Tensor* weights = op->getInput(op->Kernels);
     Tensor* outputs = op->getOutput(op->Outputs);
     int maxTileSize = SmvBackend::SpadSize() / inputs->getDataTypeSize();
+    // The legitimate tile budget is fixed by the on-chip scratchpad capacity,
+    // a hardware invariant the defender trusts.
+    const int legitTileSize = maxTileSize;
+    // TODO attack simulation only: the tiling attack shrinks the usable tile
+    // size to 25% of the original, so the tensors are split into more and
+    // smaller tiles. This hurts data locality and lengthens runtime (while
+    // area/power go down), without touching the numerical result.
+    if (enable_tiling_att) {
+        maxTileSize /= 4;
+        std::cout << "[tiling-attack] maxTileSize shrunk to 25%: " << maxTileSize
+                  << " elements.\n";
+    }
+    // Defense: tiling-parameter range check. A compromised compiler that emits
+    // a tile budget far below what the scratchpad can hold is anomalous, since
+    // it needlessly under-utilises on-chip memory. The defender rejects such a
+    // directive and restores the hardware-supported budget, neutralising the
+    // attack's overhead without affecting legitimate (full-budget) compilation.
+    if (enable_tiling_defense && maxTileSize < legitTileSize / 2) {
+        std::cout << "[tiling-defense] tile budget " << maxTileSize
+                  << " is below the range-check threshold (" << legitTileSize / 2
+                  << "); restoring to the scratchpad budget " << legitTileSize
+                  << " elements.\n";
+        maxTileSize = legitTileSize;
+    }
     std::array<TilingDims, 3> strategies =
             determineBestTilingDims(inputs, weights, outputs, maxTileSize);
     TilingDims inputTilingDims = strategies[0];

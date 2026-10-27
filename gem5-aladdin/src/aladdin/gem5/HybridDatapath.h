@@ -530,6 +530,8 @@ class HybridDatapath : public ScratchpadDatapath, public Gem5Datapath {
   std::string datapath_name;
 
   bool flag_delay_att;
+  // Defense: finish-flag watchdog that bounds the delay-attack stall.
+  bool flag_ffs_defense;
 };
 
 #endif

@@ -147,10 +147,16 @@ class Tensor:
           self._tensor_data = np.append(self._tensor_data, np.float16(0))
         self._tensor_data = self._tensor_data.view(np.int32)
 
-      # Serialize the data into the proto.
+      # Serialize the data into the proto. The iteration order must be C
+      # (row-major), which is how the backend indexes the tensor. np.nditer
+      # defaults to memory order, so a Fortran-ordered array -- what you get
+      # from a transpose, e.g. when converting externally trained weights --
+      # would otherwise be serialized column-major and silently corrupt the
+      # model. The Float16 path above is already safe because flatten() copies
+      # into C order.
       tensor_data_proto = tensor_data_array.data_array.add()
       tensor_data_proto.name = tensor_proto.name
-      data_list = [x for x in np.nditer(self._tensor_data)]
+      data_list = [x for x in np.nditer(self._tensor_data, order="C")]
       if self._data_type == types_pb2.Float16:
         tensor_data_proto.half_data.extend(data_list)
       elif self._data_type == types_pb2.Float32:

@@ -1,0 +1,3 @@
+# The repository ignores *.gz under smaug/experiments (traces); these are the
+# small gzipped inputs of Figure 4.
+!*.gz

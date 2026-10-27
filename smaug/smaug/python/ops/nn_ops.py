@@ -14,6 +14,44 @@ def to_padding_type(padding):
   else:
     return types_pb2.UnknownPadding
 
+# TODO attack simulation only: OPAtt (operator attack) helpers. The attack runs
+# at the operator-creating stage, so whatever it rewrites here is what gets
+# serialized and executed by the backend. See global_vars for the spec list.
+
+def _opatt_active(spec):
+  """True if OPAtt is enabled and configured with this exact spec."""
+  return (global_vars.enable_operator_attack
+          and global_vars.operator_attack_spec == spec)
+
+def _opatt_substitute_activation(activation, op_name):
+  """Operator substitution: swap the fused activation for a different one."""
+  substitutions = {
+      "relu-identity": None,
+      "relu-sigmoid": "sigmoid",
+      "relu-tanh": "tanh",
+  }
+  if activation is None or not global_vars.enable_operator_attack:
+    return activation
+  spec = global_vars.operator_attack_spec
+  if spec not in substitutions:
+    return activation
+  replacement = substitutions[spec]
+  print("[OPAtt/%s] %s: activation %s -> %s" %
+        (spec, op_name, activation, replacement or "identity"))
+  return replacement
+
+def _opatt_corrupt_weights(weight_tensor, op_name, spec):
+  """Parameter corruption: zero a random fraction of the weight elements."""
+  if not _opatt_active(spec) or weight_tensor.tensor_data is None:
+    return
+  data = weight_tensor.tensor_data
+  rng = np.random.RandomState(global_vars.operator_attack_seed)
+  mask = rng.random_sample(size=data.shape) < global_vars.operator_attack_ratio
+  data[mask] = 0
+  print("[OPAtt/%s] %s: zeroed %d/%d (%.1f%%) weight elements." %
+        (spec, op_name, int(mask.sum()), data.size,
+         100.0 * int(mask.sum()) / data.size))
+
 def convolution(
     input_tensor, filter_tensor, stride, padding, activation=None,
     activation_params=None, name="conv"):
@@ -33,6 +71,9 @@ def convolution(
     if to_padding_type(padding) == types_pb2.SamePadding:
       pad = weight_dim - 1
     return (input_dim - weight_dim + pad) // stride + 1
+
+  activation = _opatt_substitute_activation(activation, name)
+  _opatt_corrupt_weights(filter_tensor, name, "conv-weight")
 
   input_tensor, filter_tensor = array_ops.check_and_add_layout_transform(
       name=name, op=types_pb2.Convolution3d,
@@ -89,6 +130,7 @@ def batch_norm(
     activation/activation_params: Activation function to use (optional).
     name: Operator name (optional).
   """
+  activation = _opatt_substitute_activation(activation, name)
   assert (len(mean_tensor.shape.dims) == 2 and len(var_tensor.shape.dims) == 2
           and len(gamma_tensor.shape.dims) == 2
           and len(beta_tensor.shape.dims) == 2)
@@ -128,8 +170,13 @@ def max_pool(input_tensor, pool_size, stride, name="max_pool"):
   def compute_output_dim(input_dim, pool_size, stride):
     return (input_dim - pool_size) // stride + 1
 
+  op_type = types_pb2.MaxPooling
+  if _opatt_active("maxpool-avgpool"):
+    op_type = types_pb2.AveragePooling
+    print("[OPAtt/maxpool-avgpool] %s: MaxPooling -> AveragePooling" % name)
+
   input_tensor = array_ops.check_and_add_layout_transform(
-      name=name, op=types_pb2.MaxPooling, input_tensors=[input_tensor])[0]
+      name=name, op=op_type, input_tensors=[input_tensor])[0]
 
   row_idx = 2 if input_tensor.shape.layout == types_pb2.NCHW else 1
   col_idx = 3 if input_tensor.shape.layout == types_pb2.NCHW else 2
@@ -152,7 +199,7 @@ def max_pool(input_tensor, pool_size, stride, name="max_pool"):
   params.pool_params.stride.extend(stride)
   params.pool_params.pool_size.extend(pool_size)
   return common.add_node(
-      name=name, op=types_pb2.MaxPooling, input_tensors=[input_tensor],
+      name=name, op=op_type, input_tensors=[input_tensor],
       output_tensors_dims=[output_tensor_dims],
       output_tensor_layout=output_layout, params=params)[0]
 
@@ -169,6 +216,9 @@ def mat_mul(
     activation/activation_params: Activation function to use (optional).
     name: Operator name (optional).
   """
+  activation = _opatt_substitute_activation(activation, name)
+  _opatt_corrupt_weights(weight_tensor, name, "gemm-weight")
+
   input_tensor, weight_tensor = array_ops.check_and_add_layout_transform(
       name=name, op=types_pb2.InnerProduct,
       input_tensors=[input_tensor, weight_tensor])

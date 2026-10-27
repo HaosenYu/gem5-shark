@@ -42,6 +42,18 @@ extern bool useSystolicArrayWhenAvailable;
 
 extern bool enable_swap_att;
 
+extern bool enable_tiling_att;
+
+/**
+ * Scope of the tiling attack: when set, the attack also shrinks the tile
+ * budget of the SMV inner-product (GEMM) tiler, not only the convolution
+ * tiler. Off by default so earlier convolution-only results stay reproducible.
+ */
+extern bool tiling_att_gemm;
+
+/** Defense: tiling-parameter range check that mitigates the tiling attack. */
+extern bool enable_tiling_defense;
+
 
 }  // namespace smaug
 

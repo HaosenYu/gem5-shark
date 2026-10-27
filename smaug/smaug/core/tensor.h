@@ -310,6 +310,10 @@ class TensorBase {
     }
     bool isDead() const { return dead; }
     void setDead(bool _dead = true) { dead = _dead; }
+    bool isRuntimeProduced() const { return runtimeProduced; }
+    void setRuntimeProduced(bool _produced = true) {
+        runtimeProduced = _produced;
+    }
     virtual bool containsData() const = 0;
 
    protected:
@@ -329,6 +333,12 @@ class TensorBase {
      * marked dead (except for MergeOp).
      */
     bool dead;
+    /**
+     * True if the tensor is the output of a non-Data operator, i.e. its data
+     * only exists once that operator has run (e.g. K or V^T consumed as the
+     * weights of an attention GEMM). Set by the network builder.
+     */
+    bool runtimeProduced = false;
 };
 
 /**

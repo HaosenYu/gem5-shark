@@ -119,6 +119,8 @@ def createAladdinDatapath(config, accel):
     datapath.acpCacheMSHRs = config.getint(accel, "acp_cache_mshrs")
     datapath.useAladdinDebugger = options.aladdin_debugger
     datapath.flag_delay_att = config.getboolean(accel, "flag_delay_att")
+    if config.has_option(accel, "flag_ffs_defense"):
+        datapath.flag_ffs_defense = config.getboolean(accel, "flag_ffs_defense")
     if memory_type == "cache":
         datapath.cacheSize = config.get(accel, "cache_size")
         datapath.cacheBandwidth = config.get(accel, "cache_bandwidth")

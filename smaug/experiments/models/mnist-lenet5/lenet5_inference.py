@@ -107,6 +107,28 @@ def inference_lenet5(graph, input_image):
 
 
 if __name__ == "__main__":
+    import argparse
+    from smaug.python import global_vars
+
+    # TODO attack simulation only: operator attack toggle (model-creation stage).
+    parser = argparse.ArgumentParser(description="Build the LeNet-5 SMV model.")
+    parser.add_argument(
+        "--enable-operator-attack", action="store_true",
+        help="Zero a random fraction (default 90%%) of every fully-connected "
+             "(mat_mul) weight tensor while building the model.")
+    parser.add_argument("--operator-attack-ratio", type=float, default=0.9,
+                        help="Fraction of weight elements to zero (0-1).")
+    parser.add_argument("--operator-attack-seed", type=int, default=42,
+                        help="RNG seed for reproducible weight corruption.")
+    args = parser.parse_args()
+    global_vars.enable_operator_attack = args.enable_operator_attack
+    global_vars.operator_attack_ratio = args.operator_attack_ratio
+    global_vars.operator_attack_seed = args.operator_attack_seed
+    if args.enable_operator_attack:
+        print("[operator-attack] ENABLED: zeroing %.0f%% of mat_mul weights "
+              "(seed=%d)." % (100.0 * args.operator_attack_ratio,
+                              args.operator_attack_seed))
+
     # 创建 SMAUG 计算图
     graph = create_lenet5_mnist_model(batch_size=1)
     graph.print_summary()

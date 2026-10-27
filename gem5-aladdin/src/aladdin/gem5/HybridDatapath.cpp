@@ -65,7 +65,7 @@ HybridDatapath::HybridDatapath(const HybridDatapathParams* params)
       pipelinedDma(params->pipelinedDma),
       ignoreCacheFlush(params->ignoreCacheFlush), tickEvent(this),
       use_aladdin_debugger(params->useAladdinDebugger), delayedDmaEvent(this),
-      enterDebuggerEvent(this), executedNodesLastTrigger(0), delayedFinishSignalEvent(this), flag_delay_att(params->flag_delay_att) {
+      enterDebuggerEvent(this), executedNodesLastTrigger(0), delayedFinishSignalEvent(this), flag_delay_att(params->flag_delay_att), flag_ffs_defense(params->flag_ffs_defense) {
   BaseDatapath::use_db = params->useDb;
   BaseDatapath::experiment_name = params->experimentName;
 #ifdef USE_DB
@@ -989,7 +989,18 @@ void HybridDatapath::sendFinishedSignal() {
       delayedFinishPkt = pkt;
       // Schedule the delayed packet send
       if (!delayedFinishSignalEvent.scheduled()) {
-          Tick delayCycles = 30000000 + (std::rand() % (100000000 - 300000 + 1));  // 
+          Tick delayCycles = 30000000 + (std::rand() % (100000000 - 300000 + 1));  //
+          // Defense: finish-flag watchdog. The host arms a timer bounding how
+          // long it will wait for the accelerator's finish flag. If the flag
+          // does not arrive within the watchdog window, the watchdog fires and
+          // releases it, so a delay-injection Trojan can stall the pipeline by
+          // at most the watchdog window instead of its full injected delay.
+          const Tick kFfsWatchdogTicks = 500000;
+          if (flag_ffs_defense && delayCycles > kFfsWatchdogTicks) {
+              std::cout << "[ffs-defense] finish-flag watchdog fired; delay capped from "
+                        << delayCycles << " to " << kFfsWatchdogTicks << " ticks.\n";
+              delayCycles = kFfsWatchdogTicks;
+          }
           schedule(delayedFinishSignalEvent, curTick() + delayCycles);
           DPRINTF(HybridDatapath, "Scheduled delayed finish signal send in %lu cycles .\n", delayCycles/800);
       }
@@ -1016,7 +1027,11 @@ void HybridDatapath::cacheRespCallback(PacketPtr pkt) {
     updateCacheRequestStatusOnResp(pkt, state);
   } else {
     ackedFinishSignal = true;
-    schedule(tickEvent, clockEdge(Cycles(1)));
+    // A finish-flag acknowledgement can arrive while the tick event is still
+    // pending (e.g. under NoC flit loss or heavy tiling); scheduling it twice
+    // trips gem5's EventQueue assertion.
+    if (!tickEvent.scheduled())
+      schedule(tickEvent, clockEdge(Cycles(1)));
     DPRINTF(HybridDatapath,
             "cacheRespCallback for control signal access: %#x\n",
             pkt->getAddr());

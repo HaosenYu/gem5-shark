@@ -1,6 +1,7 @@
 #include <algorithm>
 
 #include "smaug/core/backend.h"
+#include "smaug/core/globals.h"
 #include "smaug/operators/common.h"
 #include "smaug/operators/smv/smv_inner_product_op.h"
 #include "smaug/operators/smv/smv_inner_product_tiling.h"
@@ -37,6 +38,21 @@ TilingConfig TilingOptimizer::computeBasicTileShapes(SmvInnerProductOp* op) {
     Tensor* weights = op->getInput(op->Weights);
     Tensor* outputs = op->getOutput(op->Outputs);
     int maxTileSize = SmvBackend::SpadSize() / inputs->getDataTypeSize();
+    // Same attack and defense as the convolution tiler, applied to the GEMM
+    // tiler that carries all of a Transformer block's computation.
+    const int legitTileSize = maxTileSize;
+    if (enable_tiling_att && tiling_att_gemm) {
+        maxTileSize /= 4;
+        std::cout << "[tiling-attack/gemm] maxTileSize shrunk to 25%: "
+                  << maxTileSize << " elements.\n";
+    }
+    if (enable_tiling_defense && maxTileSize < legitTileSize / 2) {
+        std::cout << "[tiling-defense/gemm] tile budget " << maxTileSize
+                  << " is below the range-check threshold ("
+                  << legitTileSize / 2 << "); restoring to the scratchpad budget "
+                  << legitTileSize << " elements.\n";
+        maxTileSize = legitTileSize;
+    }
     std::array<TilingDims, 3> strategies =
             determineBestTilingDims(inputs, weights, outputs, maxTileSize);
     TilingDims inputTilingDims = strategies[0];
@@ -202,10 +218,13 @@ std::array<TiledTensor, 3> TilingOptimizer::doTiling(SmvInnerProductOp* op) {
     TilingConfig tileConfig = TilingOptimizer::computeBasicTileShapes(op);
     TiledTensor tiledInputs =
             generateTiledTensor(input, tileConfig.inputs, op, /* copy_data*/ false);
-    // Copy data for the weight tiles since the data is read-only.
+    // Copy data for the weight tiles since the data is read-only. Weights
+    // produced by another operator (e.g. K and V^T in attention) do not exist
+    // yet at tiling time; run() copies them once their producer has run.
     TiledTensor tiledWeights =
             generateTiledTensor(kernels, tileConfig.weights, op);
-    tiledWeights.copyDataToAllTiles();
+    if (!kernels->isRuntimeProduced())
+        tiledWeights.copyDataToAllTiles();
     TiledTensor tiledOutputs =
             generateTiledTensor(output, tileConfig.outputs, op, /* copy_data */ false);
     return { tiledInputs, tiledWeights, tiledOutputs };
